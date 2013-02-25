@@ -1,4 +1,4 @@
-##/***************************************
+﻿##/***************************************
 ## Copyright (c) All rights reserved
 ##
 ## File: Library_WHQL_ENV_Parsing.ps1

@@ -1,6 +1,6 @@
-whql_powershell
+﻿WHQL automation via powershell 
 
-WHQL automation via powershell 
+License
 ===============
    Copyright (C) 2013  Mike Cao <vipmike007@gmail.com>
  
@@ -17,3 +17,12 @@ WHQL automation via powershell
  
    You should have received a copy of the GNU General Public License
    along with this program; if not, see <http://www.gnu.org/licenses/>.
+   
+Usage
+
+C:\windows\syswow64\windowspowershell\v1.0\powershell -file netkvm.ps1
+
+ToDo list
+1.Excepton handle
+2.Delete operations
+3.make all HCK apis in to function
