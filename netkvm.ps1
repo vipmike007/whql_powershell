@@ -48,7 +48,7 @@ function private:netkvm
     }  # end of switch
     
 	#Debug Line
-	#$Controllername = "unused"
+	$Controllername = "unused"
     # connect to the controller
     $Manager = ConnectDataBaseManager $Controllername
 	$projectManagerException = new-object Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException
@@ -254,6 +254,13 @@ Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TestException] {
 		write-host TestException occurs!!
 		exit
 	}
-
+Trap [System.Management.Automation.MethodInvocationException] {
+		write-host MethodInvocationException!!
+		exit
+	}
+#Trap [Exception] {
+#		write-host unknownException occurs!!
+#		exit
+#	}
 	
 . netkvm
