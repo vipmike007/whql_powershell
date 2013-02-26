@@ -48,7 +48,7 @@ function private:netkvm
     }  # end of switch
     
 	#Debug Line
-	$Controllername = "unused"
+	#$Controllername = "unused"
     # connect to the controller
     $Manager = ConnectDataBaseManager $Controllername
 	$projectManagerException = new-object Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException
