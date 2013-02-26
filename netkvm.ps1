@@ -35,8 +35,8 @@ function private:netkvm
     Write-host $Controllername is $projectName
     Write-host in private:Test $Controllername is $projectName
 
-    $ObjectModel = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dll"
-    $ObjectModel = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dbconnection.dll"
+    $ObjectModel1 = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dll"
+    $ObjectModel2 = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dbconnection.dll"
 
 
     switch($Driver)
@@ -47,21 +47,18 @@ function private:netkvm
             default {Write-host Invalid driver name ,pls check whehter you type viostor netkvm vioscsi vioser balloon; return}
     }  # end of switch
     
-
+	#Debug Line
+	#$Controllername = "unused"
     # connect to the controller
     $Manager = ConnectDataBaseManager $Controllername
+	$projectManagerException = new-object Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException
+
     $RootPool = GetRootMachinePool $Manager
     $DefaultPool = GetDefaultMachinePool $RootPool   
     
     #hardcode ,need to rewrite Add features function
     $Features_Server = New-Object System.Collections.ArrayList
-    $Manager.GetFeatures() | foreach {
-        if ($_.FullName -eq ("Device.Network.LAN.RSS"))
-        { 
-            $Features = $_
-        }
-    }
-       
+    
     #load or create TestMachinePoolGroup
     $TestPoolGroupFlag = 0
     GetChildMachinePools $RootPool| foreach {
@@ -112,10 +109,7 @@ function private:netkvm
         $DeviceFamily = $Manager.CreateDeviceFamily($Driver, $HardwareIds)
     } #end of if
 
-
-
-    "there are {0} machines in the default pool" -f $DefaultPool.GetMachines().Count
-    "no problem 1" 
+    "there are {0} machines in the default pool" -f $DefaultPool.GetMachines().Count 
 
     $DefaultPool.GetMachines() | foreach {
         write-host $_.Name
@@ -125,6 +119,7 @@ function private:netkvm
             $SUT = $_       
             $MachineName = $SUT.Name
             $MachinePoolName = $SUT.Name.SubString(0,12)
+			$SUT_OSPlatform = $_.OSPlatform.Name
             $TestMachinePoolFlag = 0    
             Write-Host We will test host majorversion is  $_.OSPlatform.MajorVersion now
             Write-Host We will test host Architecture is  $_.OSPlatform.Architecture now
@@ -133,6 +128,17 @@ function private:netkvm
             Write-Host We will test host Name is  $_.OSPlatform.Name now
             Write-Host We will test host Description is  $_.OSPlatform.Description now
             Write-Host the hashcode is $_.OSPlatform.GetHashCode() now 
+			$Manager.GetFeatures() | foreach {
+			if ($SUT_OSPlatform.Contains("Server") -and $_.FullName -eq ("Device.Network.LAN.RSS"))
+			{ 
+				$Features = $_
+			}
+			if ($SUT_OSPlatform.Contains("Client") -and $_.FullName -eq ("Device.Network.LAN.PM"))
+			{ 
+				$Features = $_
+			}
+    }
+			
         
             $TestPoolGroup.GetChildPools() | foreach {
                 if($_.Name -eq $MachinePoolName) #if the pool exists ,move the previous guests to sub-pool
@@ -214,9 +220,40 @@ function private:netkvm
         } # ($_.name.Contains($MachineNameSignature) -AND  ($_.name.SubString(13,1) -eq "C") ) 
   
     } # end of get machines
+
     
 } 
 
 
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException] {
+		write-host ProjectManagerException occurs!!
+		exit
+	}
+	
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.DataIntegrityException] {
+		write-host DataIntegrityException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.MachineException] {
+		write-host MachineException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProductInstanceException] {
+		write-host ProductInstanceException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ScheduleException] {
+		write-host ScheduleException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TargetException] {
+		write-host TargetException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TestException] {
+		write-host TestException occurs!!
+		exit
+	}
 
+	
 . netkvm
