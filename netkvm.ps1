@@ -51,10 +51,27 @@ function private:netkvm
 	#$Controllername = "unused"
     # connect to the controller
     $Manager = ConnectDataBaseManager $Controllername
-	$projectManagerException = new-object Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException
 
     $RootPool = GetRootMachinePool $Manager
     $DefaultPool = GetDefaultMachinePool $RootPool   
+	
+	#Remove ARM and IA64 platform hosts 
+	$ServerPlatforms = New-Object System.Collections.ArrayList
+	$Platforms = New-Object System.Collections.ArrayList
+	$Manager.GetPlatforms() | foreach {
+		Write-host code : $_.code
+		if (!($_.Code.Contains("IA64") -or $_.Code.Contains("ARM")))
+        {
+			if($_.Code.Contains("Server"))
+			{
+				$ServerPlatforms.Add($_.Code)
+			}
+			else
+			{
+				$Platforms.Add($_.Code)
+			}
+		}
+	}
     
     #hardcode ,need to rewrite Add features function
     $Features_Server = New-Object System.Collections.ArrayList
@@ -119,7 +136,7 @@ function private:netkvm
             $SUT = $_       
             $MachineName = $SUT.Name
             $MachinePoolName = $SUT.Name.SubString(0,12)
-			$SUT_OSPlatform = $_.OSPlatform.Name
+			$SUT_OSPlatform = $_.OSPlatform.Code
             $TestMachinePoolFlag = 0    
             Write-Host We will test host majorversion is  $_.OSPlatform.MajorVersion now
             Write-Host We will test host Architecture is  $_.OSPlatform.Architecture now
@@ -129,11 +146,11 @@ function private:netkvm
             Write-Host We will test host Description is  $_.OSPlatform.Description now
             Write-Host the hashcode is $_.OSPlatform.GetHashCode() now 
 			$Manager.GetFeatures() | foreach {
-			if ($SUT_OSPlatform.Contains("Server") -and $_.FullName -eq ("Device.Network.LAN.RSS"))
+			if ($ServerPlatforms -contains $SUT_OSPlatform -and $_.FullName -eq ("Device.Network.LAN.RSS"))
 			{ 
 				$Features = $_
 			}
-			if ($SUT_OSPlatform.Contains("Client") -and $_.FullName -eq ("Device.Network.LAN.PM"))
+			if ($Platforms -contains $SUT_OSPlatform -and $_.FullName -eq ("Device.Network.LAN.PM"))
 			{ 
 				$Features = $_
 			}
