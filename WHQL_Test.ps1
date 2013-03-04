@@ -47,7 +47,7 @@ else
 switch($Driver)
 {
 {$Driver -eq "viostor"}{Write-host "viostor";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1001&SUBSYS_00021AF4";break}
-{$Driver -eq "netkvm"} {Write-host "netkvm";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1000&SUBSYS_00011AF4";break}
+{$Driver -eq "netkvm"} {Write-host "netkvm";[. netkvm ;break}
 {$Driver -eq "vioscsi"}{Write-host "vioscsi";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1004&SUBSYS_00081AF4";break}
 {$Driver -eq "vioser"} {Write-host "vioser";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1003&SUBSYS_00031AF4";break}
 {$Driver -eq "balloon"}{Write-host "balloon";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1002&SUBSYS_00051AF4";break}

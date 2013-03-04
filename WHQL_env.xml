@@ -1,5 +1,6 @@
 ﻿<Config>
 <Controller>virtio-hck</Controller>
 <Driver>netkvm</Driver>
-<Driver_Version>54</Driver_Version>
+<Driver_Version>054</Driver_Version>
+<OSPlatform>201264</OSPlatform>
 </Config>
