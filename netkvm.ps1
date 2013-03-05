@@ -159,7 +159,8 @@ function CreateDeviceFamily($Manager, $Driver ,$HardwareIds)
 function ManualAddFeatures( $Manager ,$OSPlatformCode)
 {
 	$Manager.GetFeatures() | foreach {
-		if ($OSPlatformCode.Contains("Server") -and $_.FullName -eq ("Device.Network.LAN.RSS"))
+		Write-Host $OSPlatformCode
+		if ($OSPlatformCode.Contains("SERVER") -and $_.FullName -eq ("Device.Network.LAN.RSS"))
 		{ 
 			$Features = $_
 		}
@@ -168,33 +169,73 @@ function ManualAddFeatures( $Manager ,$OSPlatformCode)
 			$Features = $_
 		}
 	}
-	Return $Features
+	return $Features
 }
 #Need to investigate again!!!
-function MoveMachineToTestPool($GuestNameSignature ,$TestPool, $Role)
+function MoveMachineToTestPool( $DefaultPool , $GuestNameSignature , $TestPool, $Role ,$Driver)
 {
-	$DefaultPool.GetMachines() | foreach {
-		if ($_.name.Contains($GuestNameSignature) -AND ($_.name.SubString(12,1) -eq $Role) )
-		{
-			$Machine = $_ 
-			$MachineName = $SUT.Name
-			
+	if ($Driver -eq "netkvm")
+	{
+		$DefaultPool.GetMachines() | foreach {
+			if ($_.Name.Contains($GuestNameSignature) -AND ($_.Name.SubString(12,1) -eq $Role) )
+			{
+				$Machine = $_ 
+				$DefaultPool.MoveMachineTo($Machine, $TestPool)
+				# no idea why after adding this line ,this function will return object type
+				#$Machine.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
+				
+				#sleep 5
+				
+				
+			}			
 		}
-
-		$DefaultPool.MoveMachineTo($_, $TestPool)
-		$_.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
-		sleep 5
-			
 	}
-	Return $Machine
+	else
+	{
+		$DefaultPool.GetMachines() | foreach {
+			if ($_.Name.Contains($GuestNameSignature))
+			{
+				$Machine = $_ 
+				$DefaultPool.MoveMachineTo($Machine, $TestPool)
+				# no idea why after adding this line ,this function will return object type
+				#$Machine.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
+				
+				#sleep 5
+				
+				
+			}			
+		}
+	}
+	Write-Host aaa machine ,what is your type ? $Machine.GetType()
+	return $Machine
+	
 }
 
-function private:netkvm($GuestNameSignature)
+
+
+function CheckStatus()
 {
+	Write-Host now the VM is running now ,let us checking running status .. 
+}
+
+function RunWHQLJobs
+{	 
+
+	GetXMLValues
+	switch($Driver)
+    {
+
+        {$Driver -eq "viostor"}{Write-host "viostor";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1001&SUBSYS_00021AF4";break}
+		{$Driver -eq "netkvm"} {Write-host "netkvm"; [string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1000&SUBSYS_00011AF4";$GuestNameSignature = $Driver_Version+"NIC"+$OSPlatform;break}
+		{$Driver -eq "vioscsi"}{Write-host "vioscsi";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1004&SUBSYS_00081AF4";break}
+		{$Driver -eq "vioser"} {Write-host "vioser";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1003&SUBSYS_00031AF4";break}
+		{$Driver -eq "balloon"}{Write-host "balloon";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1002&SUBSYS_00051AF4";break}
+		default {Write-host Invalid driver name ,pls check your configuration file ,whether Driver_Name part is  viostor netkvm vioscsi vioser balloon;return}
+
+    }  # end of switch
 	GetKitValues
 	Write-Host GuestNameSignature is $GuestNameSignature
 	
-	[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1000&SUBSYS_00011AF4"
 	#Remove ARM and IA64 platform hosts 
 
     #load or create TestMachinePoolGroup
@@ -211,29 +252,13 @@ function private:netkvm($GuestNameSignature)
 
     "there are {0} machines in the default pool" -f $DefaultPool.GetMachines().Count 
 	#Move the Machines to the TestingPool
-	$DefaultPool.GetMachines() | foreach {
-		if ($_.name.Contains($GuestNameSignature) -AND ($_.name.SubString(12,1) -eq "C") )
-		{
-			$SUT = $_ 
-			$MachineName = $SUT.Name
-			$DefaultPool.MoveMachineTo($_, $TestPool)
-			$_.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
-			sleep 5
-			
-		}
-		if ($_.name.Contains($GuestNameSignature) -AND ($_.name.SubString(12,1) -eq "S") )
-		{
-			$SlaveMachine = $_ 
-			$DefaultPool.MoveMachineTo($_, $TestPool)
-			$_.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
-			sleep 5
-		
-		}
+
+	$SUT = MoveMachineToTestPool $DefaultPool $GuestNameSignature $TestPool "C" $Driver
+	Write-Host SUT do you have a machinetype $SUT.GetType()
+	$MachineName = $SUT.Name
+	Write-Host SUT machine name is $MachineName
 	
-				
-	}
-	 
-	
+	$SUT.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
     $ProductInstance = $Project.CreateProductInstance($MachineName, $TestPool, $SUT.OSPlatform)
     $TargetFamily = $ProductInstance.CreateTargetFamily($DeviceFamily)          
                
@@ -247,12 +272,20 @@ function private:netkvm($GuestNameSignature)
 		#"TargetData machine is {0}" -f $_.Machine.Name
 		if ($TargetFamily.IsValidTarget($_) -And $_.Machine.Name -eq $MachineName) 
 		{                
-			$Features = ManualAddFeatures $Manager $SUT.OSPlatform.Code
-			$Target = $TargetFamily.CreateTarget($_)
-			$Target.AddFeature($Features)
-              
+			Write-host we want to add features $SUT.OSPlatform.Code			
+			$Target = $TargetFamily.CreateTarget($_)		
 		} 
-    } #end of foreach       
+    } #end of foreach  
+	
+	#Move Slave Host for netkvm
+	if($Driver -eq "netkvm")
+	{
+		$Features = ManualAddFeatures $Manager $SUT.OSPlatform.Code
+		$Target.AddFeature($Features)
+		$SlaveMachine = MoveMachineToTestPool $DefaultPool $GuestNameSignature $TestPool "S"
+		$SlaveMachine.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
+		sleep 5
+	}
 
      "mike cao want {0} " -f $TestPool.GetMachines().Count
 
@@ -268,42 +301,51 @@ function private:netkvm($GuestNameSignature)
         {
 			
 			$MachineRole.Roles[1].AddMachine($SlaveMachine)
-           # $_.QueueTest($MachineRole)
-                        "slave job run "
-            } #end of else
-        } # end of TestPool.GetTests
-    
-} 
-
-function CheckStatus()
-{
-	Write-Host now the VM is running now ,let us checking running status .. 
-}
-
-function Main
-{	 
-
-	GetXMLValues
-	switch($Driver)
-    {
-
-        {$Driver -eq "viostor"}{Write-host "viostor";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1001&SUBSYS_00021AF4";break}
-		{$Driver -eq "netkvm"} {Write-host "netkvm";$GuestNameSignature = $Driver_Version+"NIC"+$OSPlatform;netkvm $GuestNameSignature ;break}
-		{$Driver -eq "vioscsi"}{Write-host "vioscsi";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1004&SUBSYS_00081AF4";break}
-		{$Driver -eq "vioser"} {Write-host "vioser";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1003&SUBSYS_00031AF4";break}
-		{$Driver -eq "balloon"}{Write-host "balloon";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1002&SUBSYS_00051AF4";break}
-		default {Write-host Invalid driver name ,pls check you configuration file ,whether Driver_Name part is  viostor netkvm vioscsi vioser balloon;return}
-
-    }  # end of switch
+            $_.QueueTest($MachineRole)
+            "slave job run "
+        } #end of else
+    } # end of TestPool.GetTests
 	
 	checkStatus
 
 }
 
-
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException] {
+		write-host ProjectManagerException occurs!!
+		exit
+	}
+	
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.DataIntegrityException] {
+		write-host DataIntegrityException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.MachineException] {
+		write-host MachineException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProductInstanceException] {
+		write-host ProductInstanceException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ScheduleException] {
+		write-host ScheduleException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TargetException] {
+		write-host TargetException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TestException] {
+		write-host TestException occurs!!
+		exit
+	}
+Trap [System.Management.Automation.MethodInvocationException] {
+		write-host MethodInvocationException!!
+		exit
+	}
 #Trap [Exception] {
 #		write-host unknownException occurs!!
 #		exit
 #	}
 	
-. Main
+. RunWHQLJobs

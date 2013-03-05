@@ -146,3 +146,37 @@ $DefaultPool.GetMachines() | foreach {
         $_.QueueTest();        
     }
 }
+
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException] {
+		write-host ProjectManagerException occurs!!
+		exit
+	}
+	
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.DataIntegrityException] {
+		write-host DataIntegrityException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.MachineException] {
+		write-host MachineException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProductInstanceException] {
+		write-host ProductInstanceException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ScheduleException] {
+		write-host ScheduleException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TargetException] {
+		write-host TargetException occurs!!
+		exit
+	}
+Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TestException] {
+		write-host TestException occurs!!
+		exit
+	}
+Trap [System.Management.Automation.MethodInvocationException] {
+		write-host MethodInvocationException!!
+		exit
+	}
