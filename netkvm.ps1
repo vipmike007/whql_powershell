@@ -24,33 +24,6 @@ function local:GetScriptDirectory
 	$ObjectModel1 = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dll"
 	$ObjectModel2 = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dbconnection.dll"
 
-
-function global:GetXMLValues
-{
-	$global:XML = [XML](GetXML "WHQL_env.xml")
-    $global:ControllerName = GetValue  $XML  "Controller"
-    $global:Driver =  GetValue  $XML  "Driver"
-    $global:Driver_Version = GetValue  $XML  "Driver_Version"
-    $global:ProjectName = "virtio-win-prewhql-"+$Driver_Version+"-"+$Driver
-	$global:OSPlatform = GetValue $XML "OSPlatform"
-	
-
-    Write-host $Controllername is $ProjectName
-    Write-host in private:Test $Controllername is $ProjectName
-
-}
-
-function GetKitValues
-{
-	
-	#Debug Line
-	#$Controllername = "unused"
-    #connect to the controller
-    $global:Manager = ConnectDataBaseManager $Controllername
-	$global:RootPool = GetRootMachinePool $Manager
-    $global:DefaultPool = GetDefaultMachinePool $RootPool 
-}
-
 function GetServerPlatformName($Manager)
 {
 	$ServerPlatforms = New-Object System.Collections.ArrayList
@@ -218,31 +191,32 @@ function CheckStatus()
 	Write-Host now the VM is running now ,let us checking running status .. 
 }
 
+
 function RunWHQLJobs
 {	 
 
-	GetXMLValues
+	GetXMLValuesx`
 	switch($Driver)
     {
 
-        {$Driver -eq "viostor"}{Write-host "viostor";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1001&SUBSYS_00021AF4";break}
+        {$Driver -eq "viostor"}{Write-host "viostor";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1001&SUBSYS_00021AF4";$GuestNameSignature = $Driver_Version+"BLK"+$OSPlatform;break}
 		{$Driver -eq "netkvm"} {Write-host "netkvm"; [string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1000&SUBSYS_00011AF4";$GuestNameSignature = $Driver_Version+"NIC"+$OSPlatform;break}
-		{$Driver -eq "vioscsi"}{Write-host "vioscsi";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1004&SUBSYS_00081AF4";break}
-		{$Driver -eq "vioser"} {Write-host "vioser";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1003&SUBSYS_00031AF4";break}
-		{$Driver -eq "balloon"}{Write-host "balloon";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1002&SUBSYS_00051AF4";break}
-		default {Write-host Invalid driver name ,pls check your configuration file ,whether Driver_Name part is  viostor netkvm vioscsi vioser balloon;return}
+		{$Driver -eq "vioscsi"}{Write-host "vioscsi";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1004&SUBSYS_00081AF4";$GuestNameSignature = $Driver_Version+"SCS"+$OSPlatform;break}
+		{$Driver -eq "vioser"} {Write-host "vioser";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1003&SUBSYS_00031AF4";$GuestNameSignature = $Driver_Version+"SRL"+$OSPlatform;break}
+		{$Driver -eq "balloon"}{Write-host "balloon";[string[]]$HardwareIds = "PCI\VEN_1AF4&DEV_1002&SUBSYS_00051AF4";$GuestNameSignature = $Driver_Version+"BLN"+$OSPlatform;break}
+		default {Write-host Invalid driver name ,pls check your configuration file ,whether Driver_Name part is viostor netkvm vioscsi vioser balloon;return}
 
     }  # end of switch
 	GetKitValues
 	Write-Host GuestNameSignature is $GuestNameSignature
 	
 	#Remove ARM and IA64 platform hosts 
-
-    #load or create TestMachinePoolGroup
-	$TestPoolGroup = CreateTestMachinePoolGroup $RootPool $ProjectName
  
     #load or create a project
-	$Project = CreateProject $Manager $ProjectName
+	$Project = CreateProject $Manager $GuestNameSignature # let's try to use GuestNameSignature instead of $Manager $ProjectName
+	
+	#load or create TestMachinePoolGroup
+	$TestPoolGroup = CreateTestMachinePoolGroup $RootPool $ProjectName
 
     #Load or create a DeviceFamily
 	$DeviceFamily = CreateDeviceFamily $Manager $Driver $HardwareIds

@@ -15,6 +15,31 @@
 ## This work is licensed under the terms of the GNU GPL,Version 2.
 ##
 ##****************************************/ 
+function global:GetXMLValues
+{
+	$global:XML = [XML](GetXML "WHQL_env.xml")
+    $global:ControllerName = GetValue  $XML  "Controller"
+    $global:Driver =  GetValue  $XML  "Driver"
+    $global:Driver_Version = GetValue  $XML  "Driver_Version"
+    $global:ProjectName = "virtio-win-prewhql-"+$Driver_Version+"-"+$Driver
+	$global:OSPlatform = GetValue $XML "OSPlatform"
+	
+
+    Write-host $Controllername is $ProjectName
+    Write-host in private:Test $Controllername is $ProjectName
+
+}
+
+function GetKitValues
+{
+	
+	#Debug Line
+	#$Controllername = "unused"
+    #connect to the controller
+    $global:Manager = ConnectDataBaseManager $Controllername
+	$global:RootPool = GetRootMachinePool $Manager
+    $global:DefaultPool = GetDefaultMachinePool $RootPool 
+}
 
 function local:GetXML($XML_Name)
 {
