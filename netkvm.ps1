@@ -38,14 +38,14 @@ function GetServerPlatformName($Manager)
 
 function GetPlatformName($Manager)
 {
-	$ServerPlatforms = New-Object System.Collections.ArrayList
+	$DesktopPlatforms = New-Object System.Collections.ArrayList
 	$Manager.GetPlatforms() | foreach {
 		if (!($_.Code.Contains("IA64") -or $_.Code.Contains("ARM") -or $_.Code.Contains("Server")) )
 		{
-			$ServerPlatforms.Add($_.Code)
+			$DesktopPlatforms.Add($_.Code)
 		}
 	}
-	return	$ServerPlatforms
+	return	$DesktopPlatforms
 }
 
 function CreateTestMachinePoolGroup ($RootPool ,$ProjectName)
@@ -145,18 +145,23 @@ function ManualAddFeatures( $Manager ,$OSPlatformCode)
 	return $Features
 }
 #Need to investigate again!!!
-function MoveMachineToTestPool( $DefaultPool , $GuestNameSignature , $TestPool, $Role ,$Driver)
+function MoveMachineToTestPool( $DefaultPool ,$GuestNameSignature ,$TestPool ,$Role ,$Driver)
 {
+	#Write-Host "why i am not execute????"
+	#"How many machines in the machine pool {0}" -f $DefaultPool.GetMachines().Count
 	if ($Driver -eq "netkvm")
 	{
+		#Write-host SUT signratue is  $GuestNameSignature
+		#Write-host Roles is {0}  $Role
 		$DefaultPool.GetMachines() | foreach {
+		
 			if ($_.Name.Contains($GuestNameSignature) -AND ($_.Name.SubString(12,1) -eq $Role) )
 			{
 				$Machine = $_ 
-				$DefaultPool.MoveMachineTo($Machine, $TestPool)
+				Write-Host the machine is moved
+				$aa=$DefaultPool.MoveMachineTo($_, $TestPool)
 				# no idea why after adding this line ,this function will return object type
 				#$Machine.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
-				
 				#sleep 5
 				
 				
@@ -179,7 +184,7 @@ function MoveMachineToTestPool( $DefaultPool , $GuestNameSignature , $TestPool, 
 			}			
 		}
 	}
-	Write-Host aaa machine ,what is your type ? $Machine.GetType()
+	Write-Host My machine ,what is your type  $Machine.GetType()
 	return $Machine
 	
 }
@@ -195,7 +200,7 @@ function CheckStatus()
 function RunWHQLJobs
 {	 
 
-	GetXMLValuesx`
+	GetXMLValues
 	switch($Driver)
     {
 
@@ -226,7 +231,7 @@ function RunWHQLJobs
 
     "there are {0} machines in the default pool" -f $DefaultPool.GetMachines().Count 
 	#Move the Machines to the TestingPool
-
+	#$SUT = New-Object Microsoft.Windows.Kits.Hardware.ObjectModel.WttMachine
 	$SUT = MoveMachineToTestPool $DefaultPool $GuestNameSignature $TestPool "C" $Driver
 	Write-Host SUT do you have a machinetype $SUT.GetType()
 	$MachineName = $SUT.Name
@@ -315,11 +320,11 @@ Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TestException] {
 	}
 Trap [System.Management.Automation.MethodInvocationException] {
 		write-host MethodInvocationException!!
+        exit
+	}
+Trap [Exception] {
+		write-host unknownException occurs!!
 		exit
 	}
-#Trap [Exception] {
-#		write-host unknownException occurs!!
-#		exit
-#	}
 	
 . RunWHQLJobs
