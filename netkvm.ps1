@@ -184,7 +184,7 @@ function MoveMachineToTestPool( $DefaultPool ,$GuestNameSignature ,$TestPool ,$R
 			}			
 		}
 	}
-	Write-Host My machine ,what is your type  $Machine.GetType()
+	#Write-Host My machine ,what is your type  $Machine.GetType()
 	return $Machine
 	
 }
@@ -238,6 +238,7 @@ function RunWHQLJobs
 	Write-Host SUT machine name is $MachineName
 	
 	$SUT.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
+	sleep 20
     $ProductInstance = $Project.CreateProductInstance($MachineName, $TestPool, $SUT.OSPlatform)
     $TargetFamily = $ProductInstance.CreateTargetFamily($DeviceFamily)          
                
@@ -263,7 +264,7 @@ function RunWHQLJobs
 		$Target.AddFeature($Features)
 		$SlaveMachine = MoveMachineToTestPool $DefaultPool $GuestNameSignature $TestPool "S"
 		$SlaveMachine.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::Ready, 1)
-		sleep 5
+		sleep 20
 	}
 
      "mike cao want {0} " -f $TestPool.GetMachines().Count
@@ -289,42 +290,6 @@ function RunWHQLJobs
 
 }
 
-Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProjectManagerException] {
-		write-host ProjectManagerException occurs!!
-		exit
-	}
-	
-Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.DataIntegrityException] {
-		write-host DataIntegrityException occurs!!
-		exit
-	}
-Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.MachineException] {
-		write-host MachineException occurs!!
-		exit
-	}
-Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ProductInstanceException] {
-		write-host ProductInstanceException occurs!!
-		exit
-	}
-Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.ScheduleException] {
-		write-host ScheduleException occurs!!
-		exit
-	}
-Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TargetException] {
-		write-host TargetException occurs!!
-		exit
-	}
-Trap [Microsoft.Windows.Kits.Hardware.ObjectModel.TestException] {
-		write-host TestException occurs!!
-		exit
-	}
-Trap [System.Management.Automation.MethodInvocationException] {
-		write-host MethodInvocationException!!
-        exit
-	}
-Trap [Exception] {
-		write-host unknownException occurs!!
-		exit
-	}
+
 	
 . RunWHQLJobs
