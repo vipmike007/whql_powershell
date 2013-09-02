@@ -1,6 +1,7 @@
 ﻿<Config>
-<Controller>virtio-hck</Controller>
+<Controller>HCKWHQL</Controller>
 <Driver>netkvm</Driver>
-<Driver_Version>065</Driver_Version>
+<Driver_Version>067</Driver_Version>
 <OSPlatform>2012R2</OSPlatform>
+<GroupName>67-serial</GroupName>
 </Config>

@@ -23,11 +23,12 @@ function global:GetXMLValues
     $global:Driver_Version = GetValue  $XML  "Driver_Version"
     $global:ProjectName = "virtio-win-prewhql-"+$Driver_Version+"-"+$Driver
 	$global:OSPlatform = GetValue $XML "OSPlatform"
+    $global:GroupName = GetValue $XML "GroupName"
 	
 
     Write-host $Controllername is $ProjectName
     Write-host in private:Test $Controllername is $ProjectName
-
+    Write-host in groupname is $GroupName
 }
 
 function GetKitValues
