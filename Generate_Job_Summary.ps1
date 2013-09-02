@@ -57,7 +57,7 @@ function GenerateJobSummary
     } #end of manager foreach
     
     Write-Host "totally job count" $JobHashTable.Count
-    [int]$Line = $JobHashTable.Count+2
+    [int]$Line = $JobHashTable.Count+2+2
     [int]$col=0
     
     
@@ -101,13 +101,38 @@ function GenerateJobSummary
     $Manager.GetProjectNames() | foreach {
         $Project = $Manager.GetProject($_)
         if ($Project.Name.Contains($GroupName)) {
+            $Projectname=$Project.Name
+            write-host $Projectname
             $Project.GetProductInstances() | foreach {
                 write-host "Product Instance : " $_.Name 
-                write-host "`Machine pool : " $_.MachinePool.Name 
+                write-host "`Machine pool s: " $_.MachinePool.Name 
                 write-host "`OS Platform : " $_.OSPlatform.Description
                 Write-Host "tmp_host" $tmp_column
-                $ResultsTable[1,$tmp_column]=$_.OSPlatform.Description.ToString()
-           
+                
+                $Manager.GetProjectInfoList() | foreach {                
+                if($_.Name -eq $Projectname) {
+                  $ResultsTable[($Line-2),$tmp_column] = $_.TotalCount
+                  $ResultsTable[($Line-1),$tmp_column] = $_.PassedCount
+                }
+                }
+                
+                #$ResultsTable[1,$tmp_column]=$_.OSPlatform.Description.ToString 
+                 switch($_.OSPlatform.Description.ToString())
+                {
+                  "Windows Server 2012" {$ResultsTable[1,$tmp_column]="Win2012"}
+                  "Windows Server 2008 Release 2 x64" {$ResultsTable[1,$tmp_column]="Win2k8R2"}
+                  "Windows 7 Client x86" {$ResultsTable[1,$tmp_column]="Win7_32"}
+                  "Windows 7 Client x64" {$ResultsTable[1,$tmp_column]="Win7_64"}
+                  "Windows 8 x86" {$ResultsTable[1,$tmp_column]="Win8_32"}
+                  "Windows 8 x64" {$ResultsTable[1,$tmp_column]="Win8_64"}
+                  "Windows Server 2008 x86" {$ResultsTable[1,$tmp_column]="W2k8_32"}
+                  "Windows Server 2008 x64" {$ResultsTable[1,$tmp_column]="W2k8_64"}
+                  "Windows XP x86" {$ResultsTable[1,$tmp_column]="WinXP"}
+                  "Windows Server 2003 x86" {$ResultsTable[1,$tmp_column]="W2k3_32"}
+                  "Windows Server 2003 x64" {$ResultsTable[1,$tmp_column]="W2k3_64"}
+                }
+                
+                
                 $_.GetTests() | foreach {
                     for ($i=2 ;$i -le $Line ;$i++){
                         
@@ -124,8 +149,7 @@ function GenerateJobSummary
        } #end of if 
     
     } #end of $manager get projectname
-	
-#write-host $ResultsTable 
+               
 
 $excel = New-Object -ComObject Excel.Application
 $workbook = $excel.Workbooks.add()
@@ -142,7 +166,7 @@ $sheet = $workbook.WorkSheets.Item("WHQL Result")
             switch ($ResultsTable[$m,$n])
             {
               Passed {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=4}
-              Failed {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=3}
+              Failed {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=3;$sheet.cells.item($m+1,$n+1)="Failed()"}
               N/A {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=16}
               NotRun {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=9}
               default {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=24}
@@ -152,11 +176,15 @@ $sheet = $workbook.WorkSheets.Item("WHQL Result")
 $sheet.cells.item(1,1)="Detailed Testing Result"
 $sheet.cells.item($Line+1,1)="Note"
 $sheet.cells.item(2,1)="please write package info here"
+$sheet.cells.item($Line-1,1)="Total jobs"
+$sheet.Range($sheet.cells.item($Line-1,1),$sheet.cells.item($Line-1,3)).Merge()
+$sheet.cells.item($Line,1)="Passed jobs"
+$sheet.Range($sheet.cells.item($Line,1),$sheet.cells.item($Line,3)).Merge()
 $sheet.cells.item(1,1).font.bold = $true
 
 $sheet.Range($sheet.cells.item(1,1),$sheet.cells.item(1,$col)).Merge()
 $sheet.Range($sheet.cells.item($Line+1,1),$sheet.cells.item($Line+1,$col)).Merge()
-$sheet.Range($sheet.cells.item(2,1),$sheet.cells.item(($Line),1)).Merge()
+$sheet.Range($sheet.cells.item(2,1),$sheet.cells.item(($Line-2),1)).Merge()
 
 for ($o=2;$o -lt $col+1;$o ++)
 {$sheet.cells.item(2,$o).font.bold = $true}
@@ -164,7 +192,7 @@ for ($o=2;$o -lt $col+1;$o ++)
 $range = $sheet.usedRange
 $range.EntireColumn.AutoFit() | out-null
 $range.Borders.LineStyle = 1 
-$workbook.SaveAs("C:\Users\virtioadmin\Documents\whql_autoit\"+$GroupName+".xlsx")
+$workbook.SaveAs($SavePath+$GroupName+".xlsx")
 $excel.quit()
 #Write-Host "totally job count" $JobHashTable.Count
 
