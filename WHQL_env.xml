@@ -3,5 +3,6 @@
 <Driver>netkvm</Driver>
 <Driver_Version>067</Driver_Version>
 <OSPlatform>2012R2</OSPlatform>
-<GroupName>67-serial</GroupName>
+<GroupName>65-netkvm</GroupName>
+<SavePath>C:\Users\virtioadmin\Desktop\</SavePath>
 </Config>

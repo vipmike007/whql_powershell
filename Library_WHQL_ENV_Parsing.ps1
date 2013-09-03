@@ -24,7 +24,7 @@ function global:GetXMLValues
     $global:ProjectName = "virtio-win-prewhql-"+$Driver_Version+"-"+$Driver
 	$global:OSPlatform = GetValue $XML "OSPlatform"
     $global:GroupName = GetValue $XML "GroupName"
-	
+	$global:SavePath = GetValue $XML "SavePath"
 
     Write-host $Controllername is $ProjectName
     Write-host in private:Test $Controllername is $ProjectName
