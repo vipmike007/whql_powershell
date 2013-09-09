@@ -23,8 +23,21 @@ function local:GetScriptDirectory
 	
 	$ObjectModel1 = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dll"
 	$ObjectModel2 = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.dbconnection.dll"
+	$Submission   = LoadObjectModel "microsoft.windows.Kits.Hardware.objectmodel.submission.dll"
 
-    
+	
+
+
+function GenerateHCKPackages($Project,$saveFileName)
+{
+	write-host "file save path is " $saveFileName
+	$packageWriter = new-object  -typename Microsoft.Windows.Kits.Hardware.ObjectModel.Submission.PackageWriter -Args $project
+	$packageWriter.Save($saveFileName+".hckx")
+    $packageWriter.Dispose()
+
+
+}
+
 
 
 function GenerateJobSummary
@@ -47,8 +60,11 @@ function GenerateJobSummary
             write-host "`tPassed : " $_.PassedCount
             write-host "`tFailed : " $_.FailedCount
             write-host "`tRunning: " $_.RunningCount
-            write-host "`Project Status: " $Project.Info.Status 
-            $Project = $Manager.GetProject($_.Name)
+			$Project = $Manager.GetProject($_.Name)
+            write-host "`Project Status: " $Project.Info.Status
+			$saveFileName = $SavePath + $GroupName
+            GenerateHCKPackages $Project $saveFileName
+			
             $Project.GetTests()|foreach {
                 $JobHashTable.Add($_.Id,$_.Name)               
 			}  #end of guest tests foreach
