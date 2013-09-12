@@ -197,7 +197,9 @@ function GenerateJobSummary
                   "Windows XP x86" {$ResultsTable[1,$tmp_column]="WinXP"}
                   "Windows Server 2003 x86" {$ResultsTable[1,$tmp_column]="W2k3_32"}
                   "Windows Server 2003 x64" {$ResultsTable[1,$tmp_column]="W2k3_64"}
-                  default {$ResultsTable[1,$tmp_column]=$_.OSPlatform.Description.ToString}
+                  "Windows Server v6.3" {$ResultsTable[1,$tmp_column]="Win2012R2"}
+                  "Windows Server v6.3 x86" {$ResultsTable[1,$tmp_column]="Win8.1_32"}
+                  "Windows Server v6.3 x64" {$ResultsTable[1,$tmp_column]="Win8.1_64"}
                 }
                 
                 
@@ -217,8 +219,7 @@ function GenerateJobSummary
        } #end of if 
     
     } #end of $manager get projectname
- write-host "lijin test"
- GenerateExcel $ResultsTable
+    GenerateExcel $ResultsTable
 
 }  #end of function
 	
