@@ -39,6 +39,55 @@ function GenerateHCKPackages($Project,$saveFileName)
 }
 
 
+function GenerateExcel($ResultsTable)
+{  
+$excel = New-Object -ComObject Excel.Application
+$workbook = $excel.Workbooks.add()
+$workbook.workSheets.item(3).delete()
+$workbook.workSheets.item(2).delete()
+$workbook.WorkSheets.item(1).Name = "WHQL Result"
+$sheet = $workbook.WorkSheets.Item("WHQL Result")
+
+ for ($m=0 ;$m -le $Line;$m++)
+  {                      
+       for ($n=0 ;$n -le ($col-1) ;$n++)
+       {
+            $sheet.cells.item($m+1,$n+1)=$ResultsTable[$m,$n]     
+            switch ($ResultsTable[$m,$n])
+            {
+              Passed {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=4}
+              Failed {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=3;$sheet.cells.item($m+1,$n+1)="Failed()"}
+              N/A {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=16}
+              NotRun {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=9}
+              default {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=24}
+            }
+       }
+  }  
+#$sheet.cells.item(1,1)="Detailed Testing Result"
+$sheet.cells.item($Line+1,1)="Note"
+$sheet.cells.item(2,1)="please write package info here"
+$sheet.cells.item($Line-1,1)="Total jobs"
+$sheet.cells.item($Line-1,2)=""
+$sheet.cells.item($Line-1,3)=""
+$sheet.cells.item($Line,2)=""
+$sheet.cells.item($Line,3)=""
+$sheet.Range($sheet.cells.item($Line-1,1),$sheet.cells.item($Line-1,3)).Merge()
+$sheet.cells.item($Line,1)="Passed jobs"
+$sheet.Range($sheet.cells.item($Line,1),$sheet.cells.item($Line,3)).Merge()
+$sheet.cells.item(1,1).font.bold = $true
+
+$sheet.Range($sheet.cells.item(1,1),$sheet.cells.item(1,$col)).Merge()
+$sheet.Range($sheet.cells.item($Line+1,1),$sheet.cells.item($Line+1,$col)).Merge()
+$sheet.Range($sheet.cells.item(2,1),$sheet.cells.item(($Line-2),1)).Merge()
+
+for ($o=2;$o -lt $col+1;$o ++)
+{$sheet.cells.item(2,$o).font.bold = $true}
+$range = $sheet.usedRange
+$range.EntireColumn.AutoFit() | out-null
+$range.Borders.LineStyle = 1 
+$workbook.SaveAs($SavePath+$GroupName+".xlsx")
+$excel.quit()
+}
 
 function GenerateJobSummary
 {	 
@@ -146,6 +195,7 @@ function GenerateJobSummary
                   "Windows XP x86" {$ResultsTable[1,$tmp_column]="WinXP"}
                   "Windows Server 2003 x86" {$ResultsTable[1,$tmp_column]="W2k3_32"}
                   "Windows Server 2003 x64" {$ResultsTable[1,$tmp_column]="W2k3_64"}
+                  default {$ResultsTable[1,$tmp_column]=$_.OSPlatform.Description.ToString}
                 }
                 
                 
@@ -165,52 +215,8 @@ function GenerateJobSummary
        } #end of if 
     
     } #end of $manager get projectname
-               
-
-$excel = New-Object -ComObject Excel.Application
-$workbook = $excel.Workbooks.add()
-$workbook.workSheets.item(3).delete()
-$workbook.workSheets.item(2).delete()
-$workbook.WorkSheets.item(1).Name = "WHQL Result"
-$sheet = $workbook.WorkSheets.Item("WHQL Result")
-
- for ($m=0 ;$m -le $Line;$m++)
-  {                      
-       for ($n=0 ;$n -le ($col-1) ;$n++)
-       {
-            $sheet.cells.item($m+1,$n+1)=$ResultsTable[$m,$n]     
-            switch ($ResultsTable[$m,$n])
-            {
-              Passed {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=4}
-              Failed {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=3;$sheet.cells.item($m+1,$n+1)="Failed()"}
-              N/A {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=16}
-              NotRun {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=9}
-              default {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=24}
-            }
-       }
-  }  
-$sheet.cells.item(1,1)="Detailed Testing Result"
-$sheet.cells.item($Line+1,1)="Note"
-$sheet.cells.item(2,1)="please write package info here"
-$sheet.cells.item($Line-1,1)="Total jobs"
-$sheet.Range($sheet.cells.item($Line-1,1),$sheet.cells.item($Line-1,3)).Merge()
-$sheet.cells.item($Line,1)="Passed jobs"
-$sheet.Range($sheet.cells.item($Line,1),$sheet.cells.item($Line,3)).Merge()
-$sheet.cells.item(1,1).font.bold = $true
-
-$sheet.Range($sheet.cells.item(1,1),$sheet.cells.item(1,$col)).Merge()
-$sheet.Range($sheet.cells.item($Line+1,1),$sheet.cells.item($Line+1,$col)).Merge()
-$sheet.Range($sheet.cells.item(2,1),$sheet.cells.item(($Line-2),1)).Merge()
-
-for ($o=2;$o -lt $col+1;$o ++)
-{$sheet.cells.item(2,$o).font.bold = $true}
-#$sheet.range("A1,A24").VerticalAlignment=$xlCenter
-$range = $sheet.usedRange
-$range.EntireColumn.AutoFit() | out-null
-$range.Borders.LineStyle = 1 
-$workbook.SaveAs($SavePath+$GroupName+".xlsx")
-$excel.quit()
-#Write-Host "totally job count" $JobHashTable.Count
+ write-host "lijin test"
+ GenerateExcel $ResultsTable
 
 }  #end of function
 	

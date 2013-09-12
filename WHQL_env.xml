@@ -1,8 +1,8 @@
 ﻿<Config>
 <Controller>HCKWHQL</Controller>
 <Driver>netkvm</Driver>
-<Driver_Version>067</Driver_Version>
-<OSPlatform>2012R2</OSPlatform>
-<GroupName>65-netkvm</GroupName>
-<SavePath>C:\Users\virtioadmin\Desktop\</SavePath>
+<Driver_Version>069</Driver_Version>
+<OSPlatform>BLUE32</OSPlatform>
+<GroupName>69-netkvm</GroupName>
+<SavePath>C:\Users\Administrator\Documents\GitHub\whql_autoit\</SavePath>
 </Config>
