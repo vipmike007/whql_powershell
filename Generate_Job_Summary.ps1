@@ -41,15 +41,15 @@ function GenerateHCKPackages($Project,$saveFileName)
 
 function GenerateExcel($ResultsTable)
 {  
-$excel = New-Object -ComObject Excel.Application
-$workbook = $excel.Workbooks.add()
-$workbook.workSheets.item(3).delete()
-$workbook.workSheets.item(2).delete()
-$workbook.WorkSheets.item(1).Name = "WHQL Result"
-$sheet = $workbook.WorkSheets.Item("WHQL Result")
+    $excel = New-Object -ComObject Excel.Application
+    $workbook = $excel.Workbooks.add()
+    $workbook.workSheets.item(3).delete()
+    $workbook.workSheets.item(2).delete()
+    $workbook.WorkSheets.item(1).Name = "WHQL Result"
+    $sheet = $workbook.WorkSheets.Item("WHQL Result")
 
- for ($m=0 ;$m -le $Line;$m++)
-  {                      
+    for ($m=0 ;$m -le $Line;$m++)
+    {                      
        for ($n=0 ;$n -le ($col-1) ;$n++)
        {
             $sheet.cells.item($m+1,$n+1)=$ResultsTable[$m,$n]     
@@ -62,32 +62,34 @@ $sheet = $workbook.WorkSheets.Item("WHQL Result")
               default {$sheet.cells.item($m+1,$n+1).Interior.ColorIndex=24}
             }
        }
-  }  
-#$sheet.cells.item(1,1)="Detailed Testing Result"
-$sheet.cells.item($Line+1,1)="Note"
-$sheet.cells.item(2,1)="please write package info here"
-$sheet.cells.item($Line-1,1)="Total jobs"
-$sheet.cells.item($Line-1,2)=""
-$sheet.cells.item($Line-1,3)=""
-$sheet.cells.item($Line,2)=""
-$sheet.cells.item($Line,3)=""
-$sheet.Range($sheet.cells.item($Line-1,1),$sheet.cells.item($Line-1,3)).Merge()
-$sheet.cells.item($Line,1)="Passed jobs"
-$sheet.Range($sheet.cells.item($Line,1),$sheet.cells.item($Line,3)).Merge()
-$sheet.cells.item(1,1).font.bold = $true
+    }  
+    #$sheet.cells.item(1,1)="Detailed Testing Result"
+    $sheet.cells.item($Line+1,1)="Note"
+    $sheet.cells.item(2,1)="please write package info here"
+    $sheet.cells.item($Line-1,1)="Total jobs"
+    $sheet.cells.item($Line-1,2)=""
+    $sheet.cells.item($Line-1,3)=""
+    $sheet.cells.item($Line,2)=""
+    $sheet.cells.item($Line,3)=""
+    $sheet.Range($sheet.cells.item($Line-1,1),$sheet.cells.item($Line-1,3)).Merge()
+    $sheet.cells.item($Line,1)="Passed jobs"
+    $sheet.Range($sheet.cells.item($Line,1),$sheet.cells.item($Line,3)).Merge()
+    $sheet.cells.item(1,1).font.bold = $true
 
-$sheet.Range($sheet.cells.item(1,1),$sheet.cells.item(1,$col)).Merge()
-$sheet.Range($sheet.cells.item($Line+1,1),$sheet.cells.item($Line+1,$col)).Merge()
-$sheet.Range($sheet.cells.item(2,1),$sheet.cells.item(($Line-2),1)).Merge()
+    $sheet.Range($sheet.cells.item(1,1),$sheet.cells.item(1,$col)).Merge()
+    $sheet.Range($sheet.cells.item($Line+1,1),$sheet.cells.item($Line+1,$col)).Merge()
+    $sheet.Range($sheet.cells.item(2,1),$sheet.cells.item(($Line-2),1)).Merge()
 
-for ($o=2;$o -lt $col+1;$o ++)
-{$sheet.cells.item(2,$o).font.bold = $true}
-$range = $sheet.usedRange
-$range.EntireColumn.AutoFit() | out-null
-$range.Borders.LineStyle = 1 
-$workbook.SaveAs($SavePath+$GroupName+".xlsx")
-$excel.quit()
-}
+    for ($o=2;$o -lt $col+1;$o ++)
+    {
+      $sheet.cells.item(2,$o).font.bold = $true
+    }
+    $range = $sheet.usedRange
+    $range.EntireColumn.AutoFit() | out-null
+    $range.Borders.LineStyle = 1 
+    $workbook.SaveAs($SavePath+$GroupName+".xlsx")
+    $excel.quit()
+ }
 
 function GenerateJobSummary
 {	 
